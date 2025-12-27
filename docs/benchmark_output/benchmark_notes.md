@@ -73,7 +73,25 @@ HPCG（High-Performance Conjugate Gradient）是衡量超级计算机在实际�
 - HPL：密集、规则计算 → 测**理论峰值**
 - HPCG：稀疏、不规则计算 → 测**实际应用性能**
 
-### 2.2 HPCG 的输出
+### 2.2 HPCG 的选项和参数
+```
+mpirun [MPI选项] ./xhpcg [参数]
+```
+#### 选项
+- -np <n> :指定MPI进程数
+- --hostfile <file\> :指定主机文件
+- --bind-to core :将进程绑定到核心
+- --map-by core :按核心映射进程
+
+#### 参数
+- 无参数：使用默认的hpcg.dat输入文件
+- <nx\><ny\><nz\> :制定问题规模的三个维度
+- --rt=<seconds\> :指定运行时间（秒）
+#### 输入文件hpcg.dat的理解
+- 简单来说，这个文件是 HPCG（High Performance Conjugate Gradients）基准测试程序 的核心配置文件，用来定义测试的参数、规模和运行规则，HPCG 程序会读取这个文件的内容来执行对应的性能测试
+- 个人理解：hpcg相当于一个默认值库，HPCG读取参数时：命令行显式指定的参数 → hpcg.dat 文件里的参数 → 报错（无可用参数）
+
+### 2.3 HPCG 的输出
 
 #### 典型输出示例：
 ```
@@ -111,7 +129,7 @@ HPCG 2.4 rating for historical comparison is: 15.8
    - 显示参考实现与优化实现的对比
    - 可以分析各部分的性能提升
 
-### 2.3 HPCG 性能指标分析
+### 2.4 HPCG 性能指标分析
 
 #### **性能组成分析**：
 HPCG测试包含多个计算内核，性能受以下因素影响：
