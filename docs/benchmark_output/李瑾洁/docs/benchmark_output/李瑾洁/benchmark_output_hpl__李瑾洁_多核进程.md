@@ -39,7 +39,7 @@ echo "结束时间: $(date)"
 echo -e "\n=== 测试结果 ==="
 for file in HPCG-*.txt HPCG-*.yaml; do
     if [ -f "$file" ]; then
-        echo "结果文件: $file"
+        echo "结果文件: $file“
         echo "性能分数 (GFLOP/s):"
         grep -i "gflop" "$file" || grep -i "score" "$file" || tail -10 "$file"
     fi
