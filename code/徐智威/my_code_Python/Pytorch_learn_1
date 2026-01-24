@@ -1,0 +1,57 @@
+# 此代码为学习Sigmoid，ReLU，Softmax后的实践代码
+import numpy as np
+import matplotlib.pyplot as plt
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def relu(x):
+    return np.maximum(0, x)
+
+def softmax(x):
+    exp_x = np.exp(x - np.max(x))
+    return exp_x / np.sum(exp_x)
+
+x_sigmoid_relu = np.linspace(-10, 10, 1000)
+x_softmax = np.array([1.2, 3.1, 2.7])
+
+y_sigmoid = sigmoid(x_sigmoid_relu)
+y_relu = relu(x_sigmoid_relu)
+y_softmax = softmax(x_softmax)
+
+plt.figure(figsize=(15, 5))
+
+plt.subplot(1, 3, 1)
+plt.plot(x_sigmoid_relu, y_sigmoid, color='blue', linewidth=2)
+plt.title('Sigmoid 激活函数')
+plt.xlabel('x')
+plt.ylabel('σ(x)')
+plt.grid(True, alpha=0.3)
+plt.ylim(-0.1, 1.1)
+
+plt.subplot(1, 3, 2)
+plt.plot(x_sigmoid_relu, y_relu, color='red', linewidth=2)
+plt.title('ReLU 激活函数')
+plt.xlabel('x')
+plt.ylabel('f(x)')
+plt.grid(True, alpha=0.3)
+plt.ylim(-1, 10)
+
+plt.subplot(1, 3, 3)
+plt.bar(range(len(x_softmax)), y_softmax, color='green', alpha=0.7)
+plt.title('Softmax 激活函数')
+plt.xlabel('输入维度')
+plt.ylabel('概率值')
+plt.xticks(range(len(x_softmax)), [f'x{i+1}' for i in range(len(x_softmax))])
+plt.grid(True, alpha=0.3, axis='y')
+plt.ylim(0, 1)
+
+plt.tight_layout()
+plt.show()
+
+print("=== 函数测试输出 ===")
+print(f"Sigmoid(0) = {sigmoid(0):.4f} (预期：0.5)")
+print(f"ReLU(-2) = {relu(-2):.4f} (预期：0)")
+print(f"ReLU(5) = {relu(5):.4f} (预期：5)")
+print(f"Softmax输入：{x_softmax}")
+print(f"Softmax输出：{np.round(y_softmax, 4)} (总和：{np.sum(y_softmax):.4f}，预期：1.0)")
