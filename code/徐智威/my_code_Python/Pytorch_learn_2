@@ -1,0 +1,96 @@
+# 了解交换熵损失和焦点损失后进行练习的代码
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rcParams['font.sans-serif'] = ['SimHei']
+plt.rcParams['axes.unicode_minus'] = False
+
+def cross_entropy_single(y_true, y_pred):
+    epsilon = 1e-7
+    return -y_true * np.log(y_pred + epsilon)
+
+def focal_loss_single(y_true, y_pred, alpha=0.25, gamma=2):
+    epsilon = 1e-7
+    ce = -y_true * np.log(y_pred + epsilon)
+    pt = np.exp(-ce)
+    focal = alpha * (1 - pt) ** gamma * ce
+    return focal
+
+y_pred_probs = np.linspace(0.01, 0.99, 100)
+y_true = 1
+
+ce_losses = [cross_entropy_single(y_true, p) for p in y_pred_probs]
+focal_losses_gamma2 = [focal_loss_single(y_true, p, alpha=0.25, gamma=2) for p in y_pred_probs]
+focal_losses_gamma1 = [focal_loss_single(y_true, p, alpha=0.25, gamma=1) for p in y_pred_probs]
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+
+ax1.plot(y_pred_probs, ce_losses, label='交叉熵损失', linewidth=2, color='#1f77b4')
+ax1.plot(y_pred_probs, focal_losses_gamma2, label='焦点损失 (γ=2)', linewidth=2, color='#ff7f0e')
+ax1.plot(y_pred_probs, focal_losses_gamma1, label='焦点损失 (γ=1)', linewidth=2, color='#2ca02c', linestyle='--')
+ax1.set_xlabel('模型预测正类的概率 (ŷ)', fontsize=12)
+ax1.set_ylabel('损失值 (L)', fontsize=12)
+ax1.set_title('正类样本：损失随预测概率的变化', fontsize=14)
+ax1.legend(fontsize=10)
+ax1.grid(True, alpha=0.3)
+ax1.axvline(x=0.5, color='red', linestyle=':', alpha=0.5, label='预测阈值')
+
+samples = {
+    '易分负样本 (990个)': {'y_true': 0, 'y_pred': 0.1, 'count': 990},
+    '难分负样本 (10个)': {'y_true': 0, 'y_pred': 0.8, 'count': 10},
+    '难分正样本 (10个)': {'y_true': 1, 'y_pred': 0.2, 'count': 10}
+}
+
+ce_total = 0
+focal_total = 0
+sample_types = []
+ce_loss_values = []
+focal_loss_values = []
+
+for name, info in samples.items():
+    yt = info['y_true']
+    yp = info['y_pred']
+    count = info['count']
+    
+    ce = -yt * np.log(yp + 1e-7) - (1-yt) * np.log(1-yp + 1e-7)
+    ce_total += ce * count
+    ce_loss_values.append(ce * count)
+    
+    alpha = 0.9 if yt == 1 else 0.1
+    ce_single = -yt * np.log(yp + 1e-7) - (1-yt) * np.log(1-yp + 1e-7)
+    pt = np.exp(-ce_single)
+    focal = alpha * (1 - pt) ** 2 * ce_single
+    focal_total += focal * count
+    focal_loss_values.append(focal * count)
+    
+    sample_types.append(name)
+
+x = np.arange(len(sample_types))
+width = 0.35
+ax2.bar(x - width/2, ce_loss_values, width, label='交叉熵总损失', color='#1f77b4', alpha=0.8)
+ax2.bar(x + width/2, focal_loss_values, width, label='焦点损失总损失', color='#ff7f0e', alpha=0.8)
+ax2.set_xlabel('样本类型', fontsize=12)
+ax2.set_ylabel('总损失值', fontsize=12)
+ax2.set_title('类别不平衡场景：各类样本的总损失贡献', fontsize=14)
+ax2.set_xticks(x)
+ax2.set_xticklabels(sample_types, rotation=15, ha='right')
+ax2.legend(fontsize=10)
+ax2.grid(True, alpha=0.3, axis='y')
+
+for i, v in enumerate(ce_loss_values):
+    ax2.text(i - width/2, v + 10, f'{v:.0f}', ha='center', va='bottom', fontsize=9)
+for i, v in enumerate(focal_loss_values):
+    ax2.text(i + width/2, v + 10, f'{v:.0f}', ha='center', va='bottom', fontsize=9)
+
+plt.tight_layout()
+plt.show()
+
+print("="*50)
+print(f"交叉熵总损失：{ce_total:.2f}")
+print(f"焦点损失总损失：{focal_total:.2f}")
+print("\n损失贡献占比（交叉熵）：")
+for i, name in enumerate(sample_types):
+    print(f"  {name}: {ce_loss_values[i]/ce_total*100:.1f}%")
+print("\n损失贡献占比（焦点损失）：")
+for i, name in enumerate(sample_types):
+    print(f"  {name}: {focal_loss_values[i]/focal_total*100:.1f}%")
